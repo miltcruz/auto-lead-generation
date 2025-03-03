@@ -1,0 +1,8 @@
+flask
+python-dotenv
+openai
+aiohttp
+requests
+gspread
+google-auth
+oauth2client
