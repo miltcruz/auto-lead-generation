@@ -35,7 +35,7 @@ Setup Instructions
 
 1. Clone Repository
 
-        git clone https://github.com/your-repo/lead-gen-bot.git
+        git clone https://github.com/miltcruz/auto-lead-generation.git
         cd lead-gen-bot
 
 2. Install Dependencies
