@@ -1,11 +1,10 @@
-import os
 import json
 import time
+import gspread
 import logging
-from dotenv import load_dotenv
+from flask import current_app
 from google.oauth2.service_account import Credentials as ServiceAccountCredentials
 from google.cloud import storage
-import gspread
 from abc import ABC, abstractmethod
 
 class IGoogleCloudService(ABC):
@@ -19,20 +18,14 @@ class IGoogleCloudService(ABC):
 
 class GoogleCloudService(IGoogleCloudService):
     def __init__(self):
-        # Load environment variables
-        load_dotenv()
-        self.google_sheet_credentials = os.getenv("GOOGLE_SHEET_CREDENTIALS")
-        self.google_sheet_name = os.getenv("GOOGLE_SHEET_NAME")
-        self.gcp_bucket_name = os.getenv("GCP_BUCKET_NAME")
-        self.gcp_scope = os.getenv("GOOGLE_SCOPE")
-        
+
         # Google Cloud Storage setup
         self.storage_client = storage.Client()
-        self.bucket = self.storage_client.bucket(self.gcp_bucket_name)
-        
-        creds = ServiceAccountCredentials.from_json_keyfile_name(self.google_sheet_credentials, self.gcp_scope)
+        self.bucket = self.storage_client.bucket(current_app.config["GCP_BUCKET_NAME"])
+
+        creds = ServiceAccountCredentials.from_json_keyfile_name(current_app.config["GOOGLE_SHEET_CREDENTIALS"], current_app.config["GOOGLE_SCOPE"])
         self.client = gspread.authorize(creds)
-        self.sheet = self.client.open(self.google_sheet_name).sheet1
+        self.sheet = self.client.open(current_app.config["GOOGLE_SHEET_NAME"]).sheet1
     
     def store_lead(self, name: str, phone: str, message: str):
         """Store a lead in Google Sheets."""

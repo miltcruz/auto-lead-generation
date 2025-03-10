@@ -1,11 +1,6 @@
-import os
+import logging
 import requests
-import json
-import time
-import gspread
-from google.oauth2.service_account import Credentials as ServiceAccountCredentials
-from flask import Flask, request
-from google.cloud import storage
+from flask import current_app
 from abc import ABC, abstractmethod
 
 class ICalendlyService(ABC):
@@ -16,14 +11,17 @@ class ICalendlyService(ABC):
 
 class CalendlyService(ICalendlyService):
     def __init__(self):
-        self.calendly_api_key = os.getenv("CALENDLY_API_KEY")
-        self.calendly_base_url = os.getenv("CALENDLY_BASE_URL")
-        self.calendly_event_type = os.getenv("CALENDLY_EVENT_TYPE")
-        
+        pass
 
+    
     def schedule_call(self, email, name) -> dict:
-        url = self.calendly_base_url
-        payload = {"email": email, "name": name, "event_type": self.calendly_event_type}
-        headers = {"Authorization": f"Bearer {self.calendly_api_key}"}
+        url = current_app.config["CALENDLY_BASE_URL"]
+        payload = {"email": email, "name": name, "event_type": current_app.config["CALENDLY_EVENT_TYPE"] }
+        headers = {"Authorization": f"Bearer {current_app.config["CALENDLY_API_KEY"]}"}
         response = requests.post(url, json=payload, headers=headers)
+
+        if response is None:
+            logging.info("Calendly API did not return a response: " + response.json())
+            return
+        
         return response.json()

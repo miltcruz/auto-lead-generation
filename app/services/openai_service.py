@@ -1,10 +1,7 @@
+import logging
+from flask import current_app
 from abc import ABC, abstractmethod
 from openai import OpenAI
-from dotenv import load_dotenv
-import os
-
-# Load environment variables
-load_dotenv()
 
 class IChatGPTService(ABC):
     @abstractmethod
@@ -14,17 +11,21 @@ class IChatGPTService(ABC):
 
 class ChatGPTService(IChatGPTService):
     def __init__(self):
-        self.api_key = os.getenv("OPEN_AI_API_KEY")
-        self.model = os.getenv("OPENAI_MODEL")
-        self.ai_content_type = os.getenv("AI_CONTENT_TYPE")
-        self.client = OpenAI(api_key=self.api_key)
+        self.client = OpenAI(api_key=current_app.config["OPENAI_API_KEY"])
 
     def get_response(self, prompt: str) -> str:
         response = self.client.ChatCompletion.create(
-            model=self.model,
+            model=current_app.config["OPENAI_MODEL"],
             messages=[
-                {"role": "system", "content":  self.ai_content_type },
+                {"role": "system", "content":  current_app.config["AI_CONTENT_TYPE"] },
                 {"role": "user", "content": prompt}
             ]
         )
-        return response['choices'][0]['message']['content']
+
+        content = response['choices'][0]['message']['content']
+
+        if content is None or content == "":
+            logging.info("ChatGPT did not return a response: " + content)
+            return
+
+        return content
