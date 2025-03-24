@@ -29,3 +29,37 @@ class ChatGPTService(IChatGPTService):
             return
 
         return content
+    
+    def get_assitant_response(prompt):
+        # Create a new thread
+        thread = current_app.client.beta.threads.create()
+
+        # Send a message to the thread
+        current_app.client.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=prompt
+        )
+
+        # Run the assistant
+        run = current_app.client.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=current_app.config["OPENAI_ASSISTANT_ID"]
+        )
+
+        # Wait for completion
+        while run.status in ["queued", "in_progress"]:
+            run = current_app.client.beta.threads.runs.retrieve(
+                thread_id=thread.id,
+                run_id=run.id
+            )
+
+        # Retrieve messages from the thread
+        response = current_app.client.beta.threads.messages.list(thread_id=thread.id)
+
+        # Get the last assistant response
+        for msg in reversed(response.data):
+            if msg.role == "assistant":
+                return msg.content[0].text.value
+
+        return "No response received from the assistant."
